@@ -9,24 +9,24 @@ import { fdir, OnlyCountsOutput, PathsOutput } from "fdir";
 import { SassHelper } from "./SassCompileHelper";
 import { StatusBarUi } from "./StatusbarUi";
 import { ErrorLogger, OutputLevel, OutputWindow } from "./VscodeExtensions";
+import { LegacyFileOptions } from "sass";
 
 import autoprefixer from "autoprefixer";
 import BrowserslistError from "browserslist/error";
-import fs from "fs";
 import picomatch from "picomatch";
 import postcss from "postcss";
-import { LegacyFileOptions } from "sass";
 
 export class AppModel {
     private isWatching: boolean;
     private _logger: ErrorLogger;
+    private _isWeb: boolean;
 
-    constructor(workplaceState: vscode.Memento) {
+    constructor(isWeb: boolean, workplaceState: vscode.Memento) {
         OutputWindow.Show(OutputLevel.Trace, "Constructing app model");
 
         this.isWatching = Helper.getConfigSettings<boolean>("watchOnLaunch");
-
         this._logger = new ErrorLogger(workplaceState);
+        this._isWeb = isWeb;
 
         if (this.isWatching) {
             OutputWindow.Show(OutputLevel.Information, "Watching...");
@@ -840,6 +840,7 @@ export class AppModel {
             }
 
             let basePath = workspaceFolder.uri.fsPath;
+            const basePathUri = workspaceFolder.uri;
 
             if (forceBaseDirectory && forceBaseDirectory.length > 1) {
                 OutputWindow.Show(
@@ -850,7 +851,7 @@ export class AppModel {
                 basePath = path.resolve(basePath, AppModel.stripLeadingSlash(forceBaseDirectory));
 
                 try {
-                    if (!(await fs.promises.stat(basePath)).isDirectory()) {
+                    if ((await vscode.workspace.fs.stat(basePathUri)).type == vscode.FileType.Directory) {
                         OutputWindow.Show(
                             OutputLevel.Critical,
                             "Error with your `forceBaseDirectory` setting",
@@ -1000,6 +1001,7 @@ export class AppModel {
                                     folder
                                 );
 
+                            const basePathUri = folder.uri;
                             let basePath = folder.uri.fsPath,
                                 excludedItems = isDebugging
                                     ? ["**/node_modules/**", ".vscode/**"]
@@ -1027,7 +1029,7 @@ export class AppModel {
                                 );
 
                                 try {
-                                    if (!(await fs.promises.stat(basePath)).isDirectory()) {
+                                    if ((await vscode.workspace.fs.stat(basePathUri)).type == vscode.FileType.Directory) {
                                         OutputWindow.Show(
                                             OutputLevel.Critical,
                                             "Error with your `forceBaseDirectory` setting",
@@ -1074,6 +1076,31 @@ export class AppModel {
                                     )
                                 );
                             }
+
+                            const x = 
+                                await vscode.workspace.findFiles(
+                                    queryPattern === undefined 
+                                        ? "**/*.s[ac]ss"
+                                        : typeof queryPattern === "string" 
+                                            ? queryPattern 
+                                            : `{${queryPattern?.join(",")}}`,
+                                    `{${excludedItems?.join(",")}}`
+                                );
+
+                            return x.map(x => x.fsPath);
+                            
+                            const y = SassHelper.compileOne(
+                                x[0].fsPath, 
+                                folder.name + '/x.css', 
+                                folder.name + '/x.css.map', 
+                                {
+                                    file: "",
+                                    outputStyle: "compressed",
+                                    linefeed: undefined,
+                                    indentType: undefined,
+                                    indentWidth: undefined,
+                                }
+                            );
 
                             const isMatch = picomatch(queryPattern ?? "**/*.s[ac]ss", {
                                 ignore: excludedItems,
@@ -1340,6 +1367,174 @@ export class AppModel {
         OutputWindow.dispose();
 
         OutputWindow.Show(OutputLevel.Trace, "App model disposed");
+    }
+
+    getDisposables() : vscode.Disposable[]
+    {
+        return [
+            vscode.commands.registerCommand(
+                "liveSass.command.watchMySass",
+                async () => {
+                    OutputWindow.Show(
+                        OutputLevel.Trace,
+                        'Command called: "liveSass.command.watchMySass"'
+                    );
+
+                    await this.StartWatching();
+                }
+            ),
+            vscode.commands.registerCommand(
+                "liveSass.command.donotWatchMySass",
+                () => {
+                    OutputWindow.Show(
+                        OutputLevel.Trace,
+                        'Command called: "liveSass.command.donotWatchMySass"'
+                    );
+
+                    this.StopWatching();
+                }
+            ),
+            vscode.commands.registerCommand(
+                "liveSass.command.oneTimeCompileSass",
+                async () => {
+                    OutputWindow.Show(
+                        OutputLevel.Trace,
+                        'Command called: "liveSass.command.oneTimeCompileSass"'
+                    );
+
+                    await this.compileAllFiles();
+                }
+            ),
+            vscode.commands.registerCommand(
+                "liveSass.command.compileCurrentSass",
+                async () => {
+                    OutputWindow.Show(
+                        OutputLevel.Trace,
+                        'Command called: "liveSass.command.compileCurrentSass"'
+                    );
+
+                    await this.compileCurrentFile();
+                }
+            ),
+            vscode.commands.registerCommand(
+                "liveSass.command.openOutputWindow",
+                () => {
+                    OutputWindow.Show(
+                        OutputLevel.Trace,
+                        'Command called: "liveSass.command.openOutputWindow"'
+                    );
+
+                    this.openOutputWindow();
+                }
+            ),
+            vscode.commands.registerCommand(
+                "liveSass.command.createIssue",
+                async () => {
+                    OutputWindow.Show(
+                        OutputLevel.Trace,
+                        'Command called: "liveSass.command.createIssue"'
+                    );
+
+                    await this.createIssue();
+                }
+            ),
+            vscode.commands.registerCommand(
+                "liveSass.command.debugInclusion",
+                async () => {
+                    OutputWindow.Show(
+                        OutputLevel.Trace,
+                        'Command called: "liveSass.command.debugInclusion"'
+                    );
+
+                    await this.debugInclusion();
+                }
+            ),
+            vscode.commands.registerCommand(
+                "liveSass.command.debugFileList",
+                async () => {
+                    OutputWindow.Show(
+                        OutputLevel.Trace,
+                        'Command called: "liveSass.command.debugFileList"'
+                    );
+
+                    await this.debugFileList();
+                }
+            ),
+            vscode.commands.registerCommand(
+                "liveSass.command.showOutputOn.trace",
+                async () => {
+                    OutputWindow.Show(
+                        OutputLevel.Trace,
+                        'Command called: "liveSass.command.showOutputOn.trace"'
+                    );
+
+                    await Helper.updateOutputLogLevel(OutputLevel.Trace);
+                }
+            ),
+            vscode.commands.registerCommand(
+                "liveSass.command.showOutputOn.debug",
+                async () => {
+                    OutputWindow.Show(
+                        OutputLevel.Trace,
+                        'Command called: "liveSass.command.showOutputOn.debug"'
+                    );
+
+                    await Helper.updateOutputLogLevel(OutputLevel.Debug);
+                }
+            ),
+            vscode.commands.registerCommand(
+                "liveSass.command.showOutputOn.information",
+                async () => {
+                    OutputWindow.Show(
+                        OutputLevel.Trace,
+                        'Command called: "liveSass.command.showOutputOn.information"'
+                    );
+
+                    await Helper.updateOutputLogLevel(OutputLevel.Information);
+                }
+            ),
+            vscode.commands.registerCommand(
+                "liveSass.command.showOutputOn.warning",
+                async () => {
+                    OutputWindow.Show(
+                        OutputLevel.Trace,
+                        'Command called: "liveSass.command.showOutputOn.warning"'
+                    );
+
+                    await Helper.updateOutputLogLevel(OutputLevel.Warning);
+                }
+            ),
+            vscode.commands.registerCommand(
+                "liveSass.command.showOutputOn.error",
+                async () => {
+                    OutputWindow.Show(
+                        OutputLevel.Trace,
+                        'Command called: "liveSass.command.showOutputOn.error"'
+                    );
+
+                    await Helper.updateOutputLogLevel(OutputLevel.Error);
+                }
+            ),
+            vscode.commands.registerCommand(
+                "liveSass.command.showOutputOn.none",
+                async () => {
+                    OutputWindow.Show(
+                        OutputLevel.Trace,
+                        'Command called: "liveSass.command.showOutputOn.none"'
+                    );
+
+                    await Helper.updateOutputLogLevel(OutputLevel.Critical);
+                }
+            ),
+            vscode.workspace.onDidSaveTextDocument(async (textDocument) => {
+                OutputWindow.Show(OutputLevel.Trace, 'VS Code event: "onDidSaveTextDocument"');
+
+                // TODO: ADD - once autoprefixer can stop caching browserslist
+                //await this.browserslistChecks();
+                await this.compileOnSave(textDocument);
+            }),
+            this
+        ];
     }
 }
 

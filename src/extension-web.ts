@@ -10,7 +10,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     try {
         OutputWindow.Show(OutputLevel.Trace, '"live-sass-compiler" is now activate');
 
-        const appModel = new AppModel(false, context.workspaceState);
+        const appModel = new AppModel(true, context.workspaceState);
 
         checkNewAnnouncement(context.globalState);
 
