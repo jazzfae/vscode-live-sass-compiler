@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { OutputWindow } from "./VscodeExtensions";
-import { OutputLevel } from "./OutputLevel";
+import { OutputLevel } from "./Enums/OutputLevel";
 
 export class StatusBarUi {
     private static _statusBarItem: vscode.StatusBarItem;

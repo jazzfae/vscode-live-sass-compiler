@@ -5,7 +5,7 @@ import * as vscode from "vscode";
 import { AppModel } from "./appModel";
 import { checkNewAnnouncement } from "./announcement/index";
 import { ErrorLogger, OutputWindow } from "./VscodeExtensions";
-import { OutputLevel } from "./OutputLevel";
+import { OutputLevel } from "./Enums/OutputLevel";
 import { Helper } from "./helper";
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {

@@ -18,7 +18,7 @@
         {
             "label": "pack",
             "type": "npm",
-            "script": "rollup",
+            "script": "rollup-dev:all",
             // show the output window only if unrecognized errors occur.
             "presentation": {
                 "echo": true,

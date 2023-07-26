@@ -2,7 +2,7 @@
     "name": "live-sass",
     "displayName": "Live Sass Compiler",
     "description": "Compile Sass or Scss to CSS at realtime.",
-    "version": "6.0.6",
+    "version": "6.1.0-alpha.1",
     "publisher": "glenn2223",
     "author": {
         "name": "Glenn Marks",
@@ -32,6 +32,8 @@
         "onLanguage:sass"
     ],
     "main": "./out/extension",
+    "browser": "./out/browser",
+    "funding": "https://github.com/sponsors/TopMarksDevelopment",
     "contributes": {
         "commands": [
             {
@@ -340,18 +342,24 @@
     },
     "homepage": "https://glenn2223.github.io/vscode-live-sass-compiler/",
     "scripts": {
-        "vscode:prepublish": "npm run rollup",
-        "pretest": "npm run rollup && tsc -p ./src/test/",
+        "vscode:prepublish": "npm run rollup:all",
+        "clean": "node ./src/test/clean.js",
+        "pretest": "npm run rollup-dev:all && tsc -p ./src/test/",
         "test": "node ./out/test/runTest.js",
         "lint": "eslint -c .eslintrc.js --ext .ts ./src/",
-        "rollup": "rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript"
+        "rollup:all": "npm run clean && npm run rollup:main && npm run rollup:browser",
+        "rollup:browser": "rollup --config rollup-browser.config.ts --configPlugin @rollup/plugin-typescript",
+        "rollup:main": "rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
+        "rollup-dev:all": "npm run clean && npm run rollup-dev:main && npm run rollup-dev:browser",
+        "rollup-dev:browser": "rollup --config rollup-browser-dev.config.ts --configPlugin @rollup/plugin-typescript",
+        "rollup-dev:main": "rollup --config rollup-dev.config.ts --configPlugin @rollup/plugin-typescript"
     },
     "dependencies": {
         "autoprefixer": "^10.4.14",
         "fdir": "^6.0.1",
         "picomatch": "^2.3.1",
         "postcss": "^8.4.26",
-        "sass": "^1.62.1"
+        "sass": "^1.64.1"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^25.0.3",
@@ -368,11 +376,12 @@
         "eslint": "^8.45.0",
         "mocha": "^10.2.0",
         "rollup": "^3.26.3",
+        "rollup-plugin-polyfill-node": "^0.12.0",
         "typescript": "^5.1.6",
         "vscode-test": "^1.6.1"
     },
     "announcement": {
-        "onVersion": "6.0.6",
-        "message": "SassCompiler v6.0.6: now with YouTube video! Changes: dependancy bumps + doc changes"
+        "onVersion": "6.1.0",
+        "message": "SassCompiler v6.1.0: see the \"What's new\" YouTube video! \r\nChanges: new `formats[].generateMap` and browser support!"
     }
 }

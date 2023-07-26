@@ -1,15 +1,5 @@
 import * as vscode from "vscode";
-import { OutputLevel } from "./OutputLevel";
-
-export interface IFormat {
-    format: "compressed" | "expanded";
-    extensionName: string;
-    savePath?: string;
-    savePathReplacementPairs?: Record<string, unknown>,
-    linefeed: "cr" | "crlf" | "lf" | "lfcr";
-    indentType: "space" | "tab";
-    indentWidth: number;
-}
+import { OutputLevel } from "./Enums/OutputLevel";
 
 export class Helper {
     private static configSettings(folder?: vscode.WorkspaceFolder) {
@@ -41,9 +31,7 @@ export class Helper {
             default: {
                 const oldSetting = this.configSettings().get("showOutputWindow") as boolean | null;
 
-                return oldSetting == false
-                    ? OutputLevel.Warning
-                    : OutputLevel.Information;
+                return oldSetting == false ? OutputLevel.Warning : OutputLevel.Information;
             }
         }
     }

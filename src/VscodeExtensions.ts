@@ -1,14 +1,6 @@
-import {
-    env,
-    extensions,
-    Memento,
-    OutputChannel,
-    Uri,
-    version,
-    window,
-} from "vscode";
+import { env, extensions, Memento, OutputChannel, Uri, version, window } from "vscode";
 import { Helper } from "./helper";
-import { OutputLevel } from "./OutputLevel";
+import { OutputLevel } from "./Enums/OutputLevel";
 
 const _errorLogPath = "liveSassCompiler.ErrorInfo";
 
@@ -26,13 +18,8 @@ export class ErrorLogger {
         this.ClearLogs();
     }
 
-    async LogIssueWithAlert(
-        Message: string,
-        DetailedLogInfo: unknown
-    ): Promise<void> {
-        OutputWindow.Show(OutputLevel.Trace, "Logging issue", [
-            `Message: ${Message}`,
-        ]);
+    async LogIssueWithAlert(Message: string, DetailedLogInfo: unknown): Promise<void> {
+        OutputWindow.Show(OutputLevel.Trace, "Logging issue", [`Message: ${Message}`]);
 
         WindowPopout.Alert(`Live Sass Compiler: ${Message}`);
 
@@ -72,8 +59,7 @@ export class ErrorLogger {
                 `| Platform | ${process.platform} ${process.arch} |`,
                 `| Node | ${process.versions.node} (${process.versions.modules}) |`,
                 `| Live Sass | ${
-                    extensions.getExtension("glenn2223.live-sass")!.packageJSON
-                        .version
+                    extensions.getExtension("glenn2223.live-sass")!.packageJSON.version
                 } |`,
                 `<details><summary>Installed Extensions</summary><div>`,
                 extensions.all
@@ -83,9 +69,7 @@ export class ErrorLogger {
                 "</div></details>",
                 "",
                 `**LOG**: ${
-                    lastError === null
-                        ? ""
-                        : lastError.createdAt.toISOString().replace("T", " ")
+                    lastError === null ? "" : lastError.createdAt.toISOString().replace("T", " ")
                 }`,
                 "```JSON",
                 lastError === null
@@ -129,10 +113,7 @@ export class ErrorLogger {
     }
 
     static PrepErrorForLogging(Err: Error): unknown {
-        OutputWindow.Show(
-            OutputLevel.Trace,
-            "Converting error to a usable object"
-        );
+        OutputWindow.Show(OutputLevel.Trace, "Converting error to a usable object");
 
         return JSON.parse(JSON.stringify(Err, Object.getOwnPropertyNames(Err)));
     }
@@ -153,8 +134,7 @@ export class OutputWindow {
 
     private static get MsgChannel() {
         if (!OutputWindow._msgChannel) {
-            OutputWindow._msgChannel =
-                window.createOutputChannel("Live Sass Compile");
+            OutputWindow._msgChannel = window.createOutputChannel("Live Sass Compile");
         }
 
         return OutputWindow._msgChannel;
@@ -168,10 +148,7 @@ export class OutputWindow {
     ): void {
         const userLogLevel = Helper.getOutputLogLevel();
 
-        if (
-            outputLevel >= userLogLevel ||
-            outputLevel === OutputLevel.Critical
-        ) {
+        if (outputLevel >= userLogLevel || outputLevel === OutputLevel.Critical) {
             OutputWindow.MsgChannel.show(true);
         }
 
